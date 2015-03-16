@@ -1,0 +1,216 @@
+# ======================================================================
+# Required software packages
+# ======================================================================
+- name: install required packages
+  yum:
+    name: "{{ item }}"
+  with_items:
+  - nginx
+  - dnsmasq
+  - httpd-tools
+
+# ======================================================================
+# Create an ssh-keypair for this instance
+# ======================================================================
+- name: create a ssh-keypair for this machine
+  shell: ssh-keygen -f /home/{{ dork_user }}/.ssh/id_rsa -t rsa -N ''
+  sudo: yes
+  sudo_user: "{{ dork_user }}"
+  args:
+    creates: /home/{{ dork_user }}/.ssh/id_rsa.pub
+
+# ======================================================================
+# Dart
+# ======================================================================
+- name: check if Dart SDK is installed
+  stat:
+    path: /opt/dart
+  register: dart
+
+- name: download Dart SDK
+  get_url:
+    url: https://storage.googleapis.com/dart-archive/channels/stable/release/latest/sdk/dartsdk-linux-x64-release.zip
+    dest: /tmp/dart.zip
+  when: not dart.stat.exists
+
+- name: unzip Dart SDK
+  unarchive:
+    src: /tmp/dart.zip
+    dest: /opt
+  when: not dart.stat.exists
+
+- name: link Dart binaries
+  file:
+    src: /opt/dart-sdk/bin/{{ item }}
+    dest: /usr/bin/{{ item }}
+    state: link
+    mode: 0755
+  with_items:
+  - dart
+  - dart2js
+  - dartanalyzer
+  - dartdocgen
+  - dartfmt
+  - docgen
+  - pub
+
+- name: ensure dart executable permissions
+  file:
+    path: /opt/dart-sdk
+    state: directory
+    mode: 0755
+    recurse: yes
+  with_items:
+  - /opt/dart-sdk
+  - /opt/dork/bin
+  - /opt/dork/test
+
+# ======================================================================
+# Build Dork
+# ======================================================================
+- name: check if the dork directory exists
+  stat:
+    path: /opt/dork
+  register: dork
+
+- name: clone dork
+  debug: msg="Add clone!"
+  when: dir.stat.isdir is defined and dork.stat.isdir
+
+- name: get dork dependencies
+  shell: pub deps
+  sudo: true
+  sudo_user: "{{ dork_user }}"
+  args:
+    chdir: /opt/dork
+
+- name: copy dork executable
+  copy:
+    src: dork
+    dest: /usr/bin
+    mode: 0755
+
+# ======================================================================
+# Docker
+# ======================================================================
+- name: add docker group
+  group:
+    name: docker
+
+- name: add default user to docker group
+  user:
+    name: "{{ dork_user }}"
+    append: yes
+    groups: docker
+
+- name: install docker
+  get_url:
+    dest: /usr/bin/docker
+    url: https://get.docker.com/builds/Linux/x86_64/docker-latest
+
+- name: ensure docker is executable
+  shell: chmod +x /usr/bin/docker
+
+- name: install docker systemd services
+  copy:
+    src: docker.{{ item }}
+    dest: /etc/systemd/system/docker.{{ item }}
+  with_items:
+  - service
+  - socket
+  notify: systemctl
+
+- name: enable docker
+  shell: systemctl enable docker
+
+- name: start docker
+  service:
+    name: docker
+    state: started
+
+# ======================================================================
+# Enable dnsmasq on boot
+# ======================================================================
+- name: enable dnsmasq
+  shell: systemctl enable dnsmasq
+
+- name: start dnsmasq
+  service:
+    name: dnsmasq
+    state: started
+
+# ======================================================================
+# Build the dork container image
+# ======================================================================
+- name: copy container directory
+  copy:
+    src: container/
+    dest: /tmp/container/
+  register: container_directory
+
+- name: copy ssh key
+  shell: cp /home/{{ dork_user }}/.ssh/id_rsa.pub /tmp/container/id_rsa.pub
+  args:
+    creates: /tmp/container/id_rsa.pub
+
+- name: check if image already exists
+  shell: docker images | grep dork/container | wc -l
+  register: container
+  changed_when: container.stdout_lines[0] == "0"
+
+- name: build the base container
+  shell: docker build -t dork/container /tmp/container
+  ignore_errors: yes
+  when: container.changed
+
+- name: make /var/dork directory
+  file:
+    path: /var/dork
+    state: directory
+    owner: "{{ dork_user }}"
+
+# ======================================================================
+# Copy ansible configuration file
+# ======================================================================
+- name: copy ansible configuration
+  copy:
+    src: ansible.cfg
+    dest: /etc/ansible/ansible.cfg
+
+# ======================================================================
+# Make hostsfile writable
+# ======================================================================
+- name: make hostsfile writable
+  file:
+    path: /etc/hosts
+    group: docker
+    mode: 0775
+
+# ======================================================================
+# HTTP Proxy
+# ======================================================================
+- name: generate host nginx configuration
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+  notify: restart nginx
+
+- name: enable nginx
+  shell: systemctl enable nginx
+
+- name: start nginx
+  service:
+    name: nginx
+    state: started
+
+# ======================================================================
+# Install dork boot service
+# ======================================================================
+- name: install dork systemd service
+  copy:
+    src: dork.service
+    dest: /etc/systemd/system/dork.service
+  notify: systemctl
+
+- name: enable dork service
+  shell: systemctl enable dork

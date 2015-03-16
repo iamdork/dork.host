@@ -1,0 +1,11 @@
+[Unit]
+Description=Boot all dork containers
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c "/usr/bin/dork boot"
+
+[Install]
+WantedBy=multi-user.target

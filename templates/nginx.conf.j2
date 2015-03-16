@@ -1,0 +1,54 @@
+user  nginx;
+worker_processes  1;
+
+error_log  /var/log/nginx/error.log;
+
+pid        /run/nginx.pid;
+
+
+events {
+    worker_connections  1024;
+}
+
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  /var/log/nginx/access.log  main;
+    sendfile        on;
+    keepalive_timeout  0;
+
+    server {
+      server_name _;
+      listen 80 default_server;
+
+      location ~^\/([a-zA-Z0-9-_]+)\/?(.*)$ {
+        resolver localhost;
+        proxy_pass http://$1.$1.dork:80/$2?$args;
+        proxy_set_header X-Dork-Host $http_host;
+        proxy_set_header X-Dork-IP $remote_addr;
+        proxy_set_header X-Dork-Path $1;
+        {% if dork_host_public %}
+        auth_basic "Restricted";
+        auth_basic_user_file /etc/nginx/.htpasswd-$1;
+        {% endif %}
+      }
+
+      location ~^\/([a-zA-Z0-9-_]+)\.([a-zA-Z0-9-_]+)\/?(.*)$ {
+        resolver localhost;
+        proxy_pass http://$2.$1.dork:80/$3?$args;
+        proxy_set_header X-Dork-Host $http_host;
+        proxy_set_header X-Dork-IP $remote_addr;
+        proxy_set_header X-Dork-Path $1.$2;
+        {% if dork_host_public %}
+        auth_basic "Restricted";
+        auth_basic_user_file /etc/nginx/.htpasswd-$1;
+        {% endif %}
+      }
+    }
+}
