@@ -68,14 +68,12 @@
 # ======================================================================
 # Build Dork
 # ======================================================================
-- name: check if the dork directory exists
-  stat:
-    path: /opt/dork
-  register: dork
-
 - name: clone dork
-  debug: msg="Add clone!"
-  when: dir.stat.isdir is defined and dork.stat.isdir
+  git:
+    repo: https://github.com/iamdork/dork.host.git
+    dest: /opt/dork
+    accept_hostkey: true
+  register: dork_repo
 
 - name: get dork dependencies
   shell: pub deps
@@ -83,6 +81,7 @@
   sudo_user: "{{ dork_user }}"
   args:
     chdir: /opt/dork
+  when: dork_repo.changed
 
 - name: copy dork executable
   copy:
