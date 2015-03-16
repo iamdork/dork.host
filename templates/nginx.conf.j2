@@ -41,7 +41,7 @@ http {
 
       location ~^\/([a-zA-Z0-9-_]+)\.([a-zA-Z0-9-_]+)\/?(.*)$ {
         resolver localhost;
-        proxy_pass http://$2.$1.dork:80/$3?$args;
+        proxy_pass http://$1.$2.dork:80/$3?$args;
         proxy_set_header X-Dork-Host $http_host;
         proxy_set_header X-Dork-IP $remote_addr;
         proxy_set_header X-Dork-Path $1.$2;
