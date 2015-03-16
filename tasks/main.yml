@@ -1,4 +1,15 @@
 # ======================================================================
+# directories
+# ======================================================================
+- name: create source and build directories
+  file:
+    path: /var/{{ item }}
+    state: directory
+    owner: "{{ dork_user }}"
+  with_items:
+  - source
+  - build
+# ======================================================================
 # Required software packages
 # ======================================================================
 - name: install required packages
@@ -8,6 +19,17 @@
   - nginx
   - dnsmasq
   - httpd-tools
+  - python-devel
+  - python-pip
+  - gcc
+
+- name: install pip packages
+  pip:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+  - markupsafe
+  - ansible
 
 # ======================================================================
 # Create an ssh-keypair for this instance
@@ -75,10 +97,19 @@
     accept_hostkey: true
   register: dork_repo
 
+- name: change dork directory owner
+  file:
+    path: /opt/dork
+    owner: "{{ dork_user }}"
+    state: directory
+    recurse: true
+
 - name: get dork dependencies
   shell: pub deps
   sudo: true
   sudo_user: "{{ dork_user }}"
+  environment:
+    PUB_CACHE: /opt/dork/.pub-cache
   args:
     chdir: /opt/dork
   when: dork_repo.changed
@@ -171,6 +202,11 @@
 # ======================================================================
 # Copy ansible configuration file
 # ======================================================================
+- name: ensure ansible configuration directory
+  file:
+    path: /etc/ansible
+    state: directory
+
 - name: copy ansible configuration
   copy:
     src: ansible.cfg
