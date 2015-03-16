@@ -70,7 +70,7 @@
 # ======================================================================
 - name: clone dork
   git:
-    repo: https://github.com/iamdork/dork.host.git
+    repo: https://github.com/iamdork/dork.git
     dest: /opt/dork
     accept_hostkey: true
   register: dork_repo
