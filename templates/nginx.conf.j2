@@ -26,7 +26,7 @@ http {
     {% if dork_wildcard_domain is defined %}
     server {
       server_name ~^(?<project>[a-zA-Z0-9-_]+).{{ dork_wildcard_domain }}$;
-      listen 80 default_server;
+      listen 80;
 
       location ~^\/?(?<path>.*)$ {
         resolver localhost;
@@ -42,8 +42,8 @@ http {
     }
 
     server {
-      server_name ~^([?<instance>a-zA-Z0-9-_]+).(?<project>[a-zA-Z0-9-_]+).{{ dork_wildcard_domain }}$;
-      listen 80 default_server;
+      server_name ~^(?<instance>[a-zA-Z0-9-_]+).(?<project>[a-zA-Z0-9-_]+).{{ dork_wildcard_domain }}$;
+      listen 80;
 
       location ~^\/?(?<path>.*)$ {
         resolver localhost;
