@@ -1,1 +1,1 @@
-dork_host_public: false
+# dork_restrict_access: false# dork_wildcard_domain: mysite.com
