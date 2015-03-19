@@ -1,0 +1,2 @@
+[server]
+localhost ansible_connection=local dork_user={{ dork_user }}{% if dork_public_host is defined %} dork_public_host=true{% endif %}{% if dork_wildcard_domain is defined %} dork_wildcard_domain={{ dork_wildcard_domain }}{% endif %}
