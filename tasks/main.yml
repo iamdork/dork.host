@@ -1,10 +1,16 @@
 # ======================================================================
 # Ansible hosts file
 # ======================================================================
+- name: check if inside vagrant box
+  stat:
+    path: /vagrant
+  register: v
+
 - name: create ansible hosts file
   template:
     src: hosts.j2
     dest: /etc/ansible/hosts
+  when: not v.stat.exists
 
 # ======================================================================
 # directories
