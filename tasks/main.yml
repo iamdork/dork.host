@@ -6,6 +6,11 @@
     path: /vagrant
   register: v
 
+- name: create ansible directory
+  file:
+    path: /etc/ansible
+    state: directory
+
 - name: create ansible hosts file
   template:
     src: hosts.j2
