@@ -1,35 +1,4 @@
 # ======================================================================
-# Ansible hosts file
-# ======================================================================
-- name: check if inside vagrant box
-  stat:
-    path: /vagrant
-  register: v
-
-- name: create ansible directory
-  file:
-    path: /etc/ansible
-    state: directory
-
-- name: create ansible hosts file
-  template:
-    src: hosts.j2
-    dest: /etc/ansible/hosts
-  when: not v.stat.exists
-
-# ======================================================================
-# directories
-# ======================================================================
-- name: create source and build directories
-  file:
-    path: /var/{{ item }}
-    state: directory
-    owner: "{{ dork_user }}"
-  with_items:
-  - source
-  - build
-
-# ======================================================================
 # Required software packages
 # ======================================================================
 - name: install required packages
