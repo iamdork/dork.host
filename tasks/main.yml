@@ -165,12 +165,21 @@
   copy:
     src: container/
     dest: /tmp/container/
-  register: container_directory
 
-- name: copy ssh key
+- name: copy ssh authorized key
+  shell: cp /home/{{ dork_user }}/.ssh/id_rsa.pub /tmp/container/dork.pub
+  args:
+    creates: /tmp/container/dork.pub
+
+- name: copy ssh public key
   shell: cp /home/{{ dork_user }}/.ssh/id_rsa.pub /tmp/container/id_rsa.pub
   args:
     creates: /tmp/container/id_rsa.pub
+
+- name: copy ssh private key
+  shell: cp /home/{{ dork_user }}/.ssh/id_rsa /tmp/container/id_rsa
+  args:
+    creates: /tmp/container/id_rsa
 
 - name: check if image already exists
   shell: docker images | grep dork/container | wc -l
