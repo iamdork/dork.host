@@ -19,6 +19,7 @@
   with_items:
   - markupsafe
   - ansible
+  - passlib
 
 # ======================================================================
 # Create an ssh-keypair for this instance
@@ -103,11 +104,24 @@
     chdir: /opt/dork
   when: dork_repo.changed
 
-- name: copy dork executable
+- name: copy dork executables
   copy:
-    src: dork
-    dest: /usr/bin
+    src: bin/{{ item }}.sh
+    dest: /usr/bin/{{ item }}
     mode: 0755
+  with_items:
+  - dork
+  - dork-clone
+  - dork-play
+
+- name: copy dork executables
+  file:
+    path: /usr/bin/{{ item }}.sh
+    state: absent
+  with_items:
+  - dork
+  - dork-clone
+  - dork-play
 
 # ======================================================================
 # Docker
