@@ -36,7 +36,7 @@
 # ======================================================================
 - name: check if Dart SDK is installed
   stat:
-    path: /opt/dart
+    path: /opt/dart-sdk
   register: dart
 
 - name: download Dart SDK
