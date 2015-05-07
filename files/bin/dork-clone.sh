@@ -9,5 +9,5 @@ then
   git clone --branch $2 $1 $3
 fi
 cd $3
-git pull origin $2
+  git pull origin $2
 dork update

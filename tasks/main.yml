@@ -32,96 +32,23 @@
     creates: /home/{{ dork_user }}/.ssh/id_rsa.pub
 
 # ======================================================================
-# Dart
-# ======================================================================
-- name: check if Dart SDK is installed
-  stat:
-    path: /opt/dart-sdk
-  register: dart
-
-- name: download Dart SDK
-  get_url:
-    url: https://storage.googleapis.com/dart-archive/channels/stable/release/latest/sdk/dartsdk-linux-x64-release.zip
-    dest: /tmp/dart.zip
-  when: not dart.stat.exists
-
-- name: unzip Dart SDK
-  unarchive:
-    src: /tmp/dart.zip
-    dest: /opt
-  when: not dart.stat.exists
-
-- name: link Dart binaries
-  file:
-    src: /opt/dart-sdk/bin/{{ item }}
-    dest: /usr/bin/{{ item }}
-    state: link
-    mode: 0755
-  with_items:
-  - dart
-  - dart2js
-  - dartanalyzer
-  - dartdocgen
-  - dartfmt
-  - docgen
-  - pub
-
-- name: ensure dart executable permissions
-  file:
-    path: /opt/dart-sdk
-    state: directory
-    mode: 0755
-    recurse: yes
-  with_items:
-  - /opt/dart-sdk
-  - /opt/dork/bin
-  - /opt/dork/test
-
-# ======================================================================
 # Build Dork
 # ======================================================================
-- name: clone dork
-  git:
-    repo: https://github.com/iamdork/dork.git
-    dest: /opt/dork
-    accept_hostkey: true
-  register: dork_repo
+- name: install dork cli tool
+  pip:
+    name: git+https://github.com/iamdork/dork.git#egg=dork
+    state: latest
 
-- name: change dork directory owner
-  file:
-    path: /opt/dork
-    owner: "{{ dork_user }}"
-    state: directory
-    recurse: true
-
-- name: get dork dependencies
-  shell: pub deps
-  sudo: true
-  sudo_user: "{{ dork_user }}"
-  environment:
-    PUB_CACHE: /opt/dork/.pub-cache
-  args:
-    chdir: /opt/dork
-  when: dork_repo.changed
-
-- name: copy dork executables
+- name: copy dork helper scripts
   copy:
     src: bin/{{ item }}.sh
     dest: /usr/bin/{{ item }}
     mode: 0755
   with_items:
-  - dork
+  - dork-dev
   - dork-clone
   - dork-play
-
-- name: copy dork executables
-  file:
-    path: /usr/bin/{{ item }}.sh
-    state: absent
-  with_items:
-  - dork
-  - dork-clone
-  - dork-play
+  - dork-inventory
 
 # ======================================================================
 # Docker

@@ -4,4 +4,4 @@ if test "$#" -lt 1; then
   exit
 fi
 
-ansible-playbook -i /usr/bin/dork $1 ${@:2}
+ansible-playbook -i /usr/bin/dork-inventory $1 ${@:2}
