@@ -1,3 +1,19 @@
+- name: rebuild configuration
+  shell: ls /etc/nginx/tools/
+  register: tools
+  notify: write configuration
+
+- name: write configuration
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+  notify: restart nginx
+
+- name: start nginx
+  service:
+    name: nginx
+    state: started
+
 - name: restart nginx
   service:
     name: nginx

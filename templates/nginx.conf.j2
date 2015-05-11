@@ -65,6 +65,12 @@ http {
       server_name _;
       listen 80 default_server;
 
+      {% for tool in tools['stdout_lines'] %}
+      location ^~/{{ tool | regex_replace('^(.*).conf', '\\1') }}/ {
+        include tools/{{ tool }};
+      }
+      {% endfor %}
+
       location ~^\/(?<project>[a-zA-Z0-9-_]+)(\/(?<path>.*))?$ {
         resolver localhost;
         proxy_read_timeout 3600;
