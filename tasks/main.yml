@@ -21,15 +21,18 @@
   - ansible
   - passlib
 
-# ======================================================================
-# Create an ssh-keypair for this instance
-# ======================================================================
-- name: create a ssh-keypair for this machine
-  shell: ssh-keygen -f /home/{{ dork_user }}/.ssh/id_rsa -t rsa -N ''
-  sudo: yes
-  sudo_user: "{{ dork_user }}"
-  args:
-    creates: /home/{{ dork_user }}/.ssh/id_rsa.pub
+- name: create dork keys directory
+  file:
+    path: /etc/dork-keys
+    state: directory
+
+- name: copy insecure keypair
+  copy:
+    src: "{{ item }}"
+    dest: /etc/dork-keys/{{ item }}
+  with_items:
+  - key
+  - key.pub
 
 # ======================================================================
 # Build Dork
@@ -57,11 +60,6 @@
   group:
     name: docker
 
-- name: add default user to docker group
-  user:
-    name: "{{ dork_user }}"
-    append: yes
-    groups: docker
 
 - name: install docker
   get_url:
@@ -108,19 +106,9 @@
     dest: /tmp/container/
 
 - name: copy ssh authorized key
-  shell: cp /home/{{ dork_user }}/.ssh/id_rsa.pub /tmp/container/dork.pub
+  shell: cp /etc/dork-keys/key.pub /tmp/container/dork.pub
   args:
     creates: /tmp/container/dork.pub
-
-- name: copy ssh public key
-  shell: cp /home/{{ dork_user }}/.ssh/id_rsa.pub /tmp/container/id_rsa.pub
-  args:
-    creates: /tmp/container/id_rsa.pub
-
-- name: copy ssh private key
-  shell: cp /home/{{ dork_user }}/.ssh/id_rsa /tmp/container/id_rsa
-  args:
-    creates: /tmp/container/id_rsa
 
 - name: check if image already exists
   shell: docker images | grep dork/container | wc -l
@@ -131,12 +119,6 @@
   shell: docker build -t dork/container /tmp/container
   ignore_errors: yes
   when: container.changed
-
-- name: make /var/dork directory
-  file:
-    path: /var/dork
-    state: directory
-    owner: "{{ dork_user }}"
 
 # ======================================================================
 # Copy ansible configuration file
@@ -187,3 +169,28 @@
 
 - name: enable dork service
   shell: systemctl enable dork
+
+# ======================================================================
+# Install keychain for proper ssh agents
+# ======================================================================
+- name: register rpmforge key
+  rpm_key:
+    key: http://dag.wieers.com/rpm/packages/RPM-GPG-KEY.dag.txt
+
+- name: install the repo file
+  copy:
+    src: "{{ item }}.repo"
+    dest: /etc/yum.repos.d/{{ item }}.repo
+  with_items:
+  - rpmforge
+
+- name: install keychain
+  yum:
+    name: keychain
+    enablerepo: rpmforge
+
+- name: place keychain.sh in /etc/profile.d
+  copy:
+    src: keychain.sh
+    dest: /etc/profile.d/keychain.sh
+

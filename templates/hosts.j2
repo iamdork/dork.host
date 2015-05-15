@@ -1,2 +1,2 @@
 [server]
-localhost ansible_connection=local dork_user={{ dork_user }}{% if dork_restrict_access is defined %} dork_restrict_access=true{% endif %}{% if dork_wildcard_domain is defined %} dork_wildcard_domain={{ dork_wildcard_domain }}{% endif %}
+localhost ansible_connection=local{% if dork_restrict_access is defined %} dork_restrict_access=true{% endif %}{% if dork_wildcard_domain is defined %} dork_wildcard_domain={{ dork_wildcard_domain }}{% endif %}

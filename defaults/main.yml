@@ -1,1 +1,1 @@
-dork_user: dorkdork_host_tools: []# dork_restrict_access: false# dork_wildcard_domain: mysite.com
+dork_host_tools: []# dork_restrict_access: false# dork_wildcard_domain: mysite.com
