@@ -24,9 +24,9 @@ http {
     client_body_buffer_size 100M;
     keepalive_timeout  0;
 
-    {% if dork_wildcard_domain is defined %}
+    {% if host_wildcard_domain %}
     server {
-      server_name ~^(?<project>[a-zA-Z0-9-_]+).{{ dork_wildcard_domain }}$;
+      server_name ~^(?<project>[a-zA-Z0-9-_]+).{{ host_wildcard_domain }}$;
       listen 80;
 
       location ~^\/?(?<path>.*)$ {
@@ -36,7 +36,7 @@ http {
         proxy_set_header X-Dork-Host $http_host;
         proxy_set_header X-Dork-IP $remote_addr;
         proxy_set_header X-Dork-Path '';
-        {% if dork_restrict_access is defined %}
+        {% if host_restrict_access %}
         auth_basic "Restricted";
         auth_basic_user_file /etc/nginx/.htpasswd-$project;
         {% endif %}
@@ -44,7 +44,7 @@ http {
     }
 
     server {
-      server_name ~^(?<instance>[a-zA-Z0-9-_]+).(?<project>[a-zA-Z0-9-_]+).{{ dork_wildcard_domain }}$;
+      server_name ~^(?<instance>[a-zA-Z0-9-_]+).(?<project>[a-zA-Z0-9-_]+).{{ host_wildcard_domain }}$;
       listen 80;
 
       location ~^\/?(?<path>.*)$ {
@@ -54,7 +54,7 @@ http {
         proxy_set_header X-Dork-Host $http_host;
         proxy_set_header X-Dork-IP $remote_addr;
         proxy_set_header X-Dork-Path '';
-        {% if dork_restrict_access is defined %}
+        {% if host_restrict_access %}
         auth_basic "Restricted";
         auth_basic_user_file /etc/nginx/.htpasswd-$project;
         {% endif %}
@@ -78,7 +78,7 @@ http {
         proxy_set_header X-Dork-Host $http_host;
         proxy_set_header X-Dork-IP $remote_addr;
         proxy_set_header X-Dork-Path $project;
-        {% if dork_restrict_access is defined %}
+        {% if host_restrict_access %}
         auth_basic "Restricted";
         auth_basic_user_file /etc/nginx/.htpasswd-$project;
         {% endif %}
@@ -91,7 +91,7 @@ http {
         proxy_set_header X-Dork-Host $http_host;
         proxy_set_header X-Dork-IP $remote_addr;
         proxy_set_header X-Dork-Path $project.$instance;
-        {% if dork_restrict_access is defined %}
+        {% if host_restrict_access %}
         auth_basic "Restricted";
         auth_basic_user_file /etc/nginx/.htpasswd-$project;
         {% endif %}
