@@ -25,6 +25,20 @@ http {
     keepalive_timeout  0;
 
     {% if host_wildcard_domain %}
+
+    {% for tool in tools['stdout_lines'] %}
+      server {
+        server_name {{ tool | regex_replace('^(.*).conf', '\\1') }}.{{ host_wildcard_domain }};
+        listen 80;
+        location / {
+          include tools/{{ tool }};
+        {% if host_restrict_access %}
+          auth_basic "Restricted";
+          auth_basic_user_file /etc/nginx/.htpasswd-{{ tool }};
+        {% endif %}
+        }
+      }
+    {% endfor %}
     server {
       server_name ~^(?<project>[a-zA-Z0-9-_]+).{{ host_wildcard_domain }}$;
       listen 80;
@@ -68,6 +82,10 @@ http {
       {% for tool in tools['stdout_lines'] %}
       location ^~/{{ tool | regex_replace('^(.*).conf', '\\1') }}/ {
         include tools/{{ tool }};
+        {% if host_restrict_access %}
+        auth_basic "Restricted";
+        auth_basic_user_file /etc/nginx/.htpasswd-$project;
+        {% endif %}
       }
       {% endfor %}
 
