@@ -89,6 +89,11 @@
 # ======================================================================
 # Enable dnsmasq on boot
 # ======================================================================
+- name: copy dnsmasq config file
+  copy:
+    src: dnsmasq.conf
+    dest: /etc/dnsmasq.d/dork.conf
+
 - name: enable dnsmasq
   shell: systemctl enable dnsmasq
 
