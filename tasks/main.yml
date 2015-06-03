@@ -200,3 +200,15 @@
     src: keychain.sh
     dest: /etc/profile.d/keychain.sh
 
+# ======================================================================
+# Ansible host file aggregation
+# ======================================================================
+- name: create ansible hosts directory
+  file:
+    path: /etc/ansible/hosts.d
+    state: directory
+
+- name: trigger ansible hosts aggregation
+  command: /bin/true
+  notify: aggregate-hosts
+
