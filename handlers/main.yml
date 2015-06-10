@@ -21,6 +21,3 @@
 
 - name: systemctl
   shell: systemctl daemon-reload
-
-- name: aggregate-hosts
-  shell: cat /etc/ansible/hosts.d/*.ini > /etc/ansible/hosts
