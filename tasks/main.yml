@@ -8,18 +8,12 @@
   - nginx
   - dnsmasq
   - httpd-tools
-  - python-devel
-  - python-pip
-  - gcc
 
 - name: install pip packages
   pip:
     name: "{{ item }}"
     state: latest
   with_items:
-  - ecdsa
-  - markupsafe
-  - ansible
   - passlib
 
 - name: create dork keys directory
@@ -127,19 +121,6 @@
   when: container.changed
 
 # ======================================================================
-# Copy ansible configuration file
-# ======================================================================
-- name: ensure ansible configuration directory
-  file:
-    path: /etc/ansible
-    state: directory
-
-- name: copy ansible configuration
-  copy:
-    src: ansible.cfg
-    dest: /etc/ansible/ansible.cfg
-
-# ======================================================================
 # Make hostsfile writable
 # ======================================================================
 - name: make hostsfile writable
@@ -176,34 +157,3 @@
 - name: enable dork service
   shell: systemctl enable dork
 
-# ======================================================================
-# Install keychain for proper ssh agents
-# ======================================================================
-- name: register rpmforge key
-  rpm_key:
-    key: http://dag.wieers.com/rpm/packages/RPM-GPG-KEY.dag.txt
-
-- name: install the repo file
-  copy:
-    src: "{{ item }}.repo"
-    dest: /etc/yum.repos.d/{{ item }}.repo
-  with_items:
-  - rpmforge
-
-- name: install keychain
-  yum:
-    name: keychain
-    enablerepo: rpmforge
-
-- name: place keychain.sh in /etc/profile.d
-  copy:
-    src: keychain.sh
-    dest: /etc/profile.d/keychain.sh
-
-# ======================================================================
-# Prepare hostfiles directory
-# ======================================================================
-- name: create ansible hosts directory
-  file:
-    path: /etc/ansible/hosts.d
-    state: directory
