@@ -36,6 +36,8 @@
   pip:
     name: git+https://github.com/iamdork/dork.git#egg=dork
     state: latest
+  tags:
+  - update-dork
 
 - name: copy dork helper scripts
   copy:
