@@ -45,7 +45,6 @@
     dest: /usr/bin/{{ item }}
     mode: 0755
   with_items:
-  - dork-dev
   - dork-clone
   - dork-play
   - dork-inventory
