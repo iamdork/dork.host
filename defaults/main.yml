@@ -1,1 +1,1 @@
-host_restrict_access: Falsehost_wildcard_domain: False
+host_restrict_access: Falsehost_wildcard_domain: Falsehost_dork_version: 0.1.2

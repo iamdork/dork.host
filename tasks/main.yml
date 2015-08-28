@@ -39,19 +39,19 @@
   - update-dork
   register: dorkdev
 
-- name: install dork cli tool
-  pip:
-    name: git+https://github.com/iamdork/dork.git#egg=dork
-    state: latest
-  tags:
-  - update-dork
-  when: not dorkdev.stat.isdir is defined or not dorkdev.stat.isdir
-
 - name: install mounted dork sources
   shell: pip install -e /var/dork
   tags:
   - update-dork
   when: dorkdev.stat.isdir is defined and dorkdev.stat.isdir
+
+- name: install dork cli tool
+  pip:
+    name: dork
+    version: "{{ host_dork_version }}"
+  tags:
+  - update-dork
+  when: not dorkdev.stat.isdir is defined or not dorkdev.stat.isdir
 
 - name: copy dork helper scripts
   copy:
