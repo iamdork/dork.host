@@ -66,32 +66,16 @@
 # ======================================================================
 # Docker
 # ======================================================================
-- name: add docker group
-  group:
-    name: docker
-
+- name: copy docker repo file
+  copy:
+    src: docker.repo
+    dest: /etc/yum.repos.d/docker.repo
 
 - name: install docker
-  get_url:
-    dest: /usr/bin/docker
-    url: https://get.docker.com/builds/Linux/x86_64/docker-latest
+  yum:
+    name: docker-engine
 
-- name: ensure docker is executable
-  shell: chmod +x /usr/bin/docker
-
-- name: install docker systemd services
-  copy:
-    src: docker.{{ item }}
-    dest: /etc/systemd/system/docker.{{ item }}
-  with_items:
-  - service
-  - socket
-  notify: systemctl
-
-- name: enable docker
-  shell: systemctl enable docker
-
-- name: start docker
+- name: start docker service
   service:
     name: docker
     state: started
