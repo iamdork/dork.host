@@ -80,6 +80,25 @@
     name: docker
     state: started
 
+- name: Adjust docker service file.
+  lineinfile:
+    regexp: "ExecStart="
+    line: "ExecStart=/usr/bin/docker daemon -H tcp://127.0.0.1:2375"
+    dest: /usr/lib/systemd/system/docker.service
+
+- name: set docker host in environment
+  lineinfile:
+    line: "DOCKER_HOST=tcp://127.0.0.1:2375"
+    dest: "/etc/environment"
+
+- name: reload systemctl daemons
+  shell: systemctl daemon-reload
+
+- name: restart docker service
+  service:
+    name: docker
+    state: restarted
+
 # ======================================================================
 # Enable dnsmasq on boot
 # ======================================================================
