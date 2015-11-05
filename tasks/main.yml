@@ -150,18 +150,38 @@
 # ======================================================================
 # HTTP Proxy
 # ======================================================================
+- name: prepare directory for http auth files
+  file:
+    path: /var/dork/auth
+    state: directory
+  tags:
+  - nginx-configuration
+
+- name: copy reusable container proxy configuration
+  copy:
+    src: container_proxy.conf
+    dest: /etc/nginx/container_proxy.conf
+  tags:
+  - nginx-configuration
+
 - name: trigger config rebuild
   shell: /bin/true
   notify: rebuild configuration
+  tags:
+  - nginx-configuration
 
 - name: enable nginx
   shell: systemctl enable nginx
   notify: start nginx
+  tags:
+  - nginx-configuration
 
 - name: create tools directory in nginx configuration
   file:
     path: /etc/nginx/tools
     state: directory
+  tags:
+  - nginx-configuration
 
 # ======================================================================
 # Install dork boot service

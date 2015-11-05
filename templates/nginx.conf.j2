@@ -24,96 +24,102 @@ http {
     client_body_buffer_size 100M;
     keepalive_timeout  0;
 
-    {% if host_wildcard_domain %}
 
     {% for tool in tools['stdout_lines'] %}
       server {
         server_name {{ tool | regex_replace('^(.*).conf', '\\1') }}.{{ host_wildcard_domain }};
         listen 80;
+
+        error_page 599 = @noauth;
+        if (!-f /var/dork/auth/{{ tool | regex_replace('^(.*).conf', '\\1') }}) {
+          return 599;
+        }
+
         location / {
-          include tools/{{ tool }};
-        {% if host_restrict_access %}
           auth_basic "Restricted";
-          auth_basic_user_file /etc/nginx/.htpasswd-{{ tool | regex_replace('^(.*).conf', '\\1') }};
-        {% endif %}
+          auth_basic_user_file /var/dork/auth/{{ tool | regex_replace('^(.*).conf', '\\1') }};
+          include tools/{{ tool }};
+        }
+
+        location @noauth {
+          include tools/{{ tool }};
         }
       }
     {% endfor %}
+
     server {
       server_name ~^(?<project>[a-zA-Z0-9-_]+).{{ host_wildcard_domain }}$;
+      set $wildcard {{ host_wildcard_domain }};
+      set $subdomain $project.$project;
       listen 80;
 
-      location ~^\/?(?<path>.*)$ {
-        resolver localhost;
-        proxy_read_timeout 3600;
-        proxy_pass http://$project.$project.dork:80/$path?$args;
-        proxy_set_header X-Dork-Host $http_host;
-        proxy_set_header X-Dork-IP $remote_addr;
-        proxy_set_header X-Dork-Path '';
-        {% if host_restrict_access %}
-        auth_basic "Restricted";
-        auth_basic_user_file /etc/nginx/.htpasswd-$project;
-        {% endif %}
+      error_page 599 = @auth;
+      if (-f /var/dork/auth/$project) {
+        return 599;
+      }
+
+      location / {
+        include container_proxy.conf;
+      }
+
+      location @auth {
+        auth_basic "restricted";
+        auth_basic_user_file /var/dork/auth/$project;
+        include container_proxy.conf;
       }
     }
 
     server {
       server_name ~^(?<instance>[a-zA-Z0-9-_]+).(?<project>[a-zA-Z0-9-_]+).{{ host_wildcard_domain }}$;
+      set $wildcard {{ host_wildcard_domain }};
+      set $subdomain $project.$instance;
       listen 80;
 
-      location ~^\/?(?<path>.*)$ {
-        resolver localhost;
-        proxy_read_timeout 3600;
-        proxy_pass http://$project.$instance.dork:80/$path?$args;
-        proxy_set_header X-Dork-Host $http_host;
-        proxy_set_header X-Dork-IP $remote_addr;
-        proxy_set_header X-Dork-Path '';
-        {% if host_restrict_access %}
-        auth_basic "Restricted";
-        auth_basic_user_file /etc/nginx/.htpasswd-$project;
-        {% endif %}
+      error_page 598 = @projectauth;
+      error_page 599 = @instanceauth;
+
+      if (-f /var/dork/auth/$project.$instance) {
+        return 599;
+      }
+
+      if (-f /var/dork/auth/$project) {
+        return 598;
+      }
+
+      location / {
+        include container_proxy.conf;
+      }
+
+      location @projectauth {
+        auth_basic "restricted";
+        auth_basic_user_file /var/dork/auth/$project;
+        include container_proxy.conf;
+      }
+
+      location @instanceauth {
+        auth_basic "restricted";
+        auth_basic_user_file /var/dork/auth/$project.$instance;
+        include container_proxy.conf;
       }
     }
-    {% else %}
+
     server {
-      server_name _;
+      server_name {{ host_wildcard_domain }};
       listen 80 default_server;
 
-      {% for tool in tools['stdout_lines'] %}
-      location ^~/{{ tool | regex_replace('^(.*).conf', '\\1') }}/ {
-        include tools/{{ tool }};
-        {% if host_restrict_access %}
-        auth_basic "Restricted";
-        auth_basic_user_file /etc/nginx/.htpasswd-$project;
-        {% endif %}
-      }
-      {% endfor %}
-
-      location ~^\/(?<project>[a-zA-Z0-9-_]+)(\/(?<path>.*))?$ {
-        resolver localhost;
+      location ~^\/(?<project>[a-zA-Z0-9-_]+)(\/(?<path>.*))$ {
         proxy_read_timeout 3600;
-        proxy_pass http://$project.$project.dork:80/$path?$args;
-        proxy_set_header X-Dork-Host $http_host;
-        proxy_set_header X-Dork-IP $remote_addr;
-        proxy_set_header X-Dork-Path $project;
-        {% if host_restrict_access %}
-        auth_basic "Restricted";
-        auth_basic_user_file /etc/nginx/.htpasswd-$project;
-        {% endif %}
+        proxy_pass http://127.0.0.1:80/$path?$args;
+        proxy_set_header Host $project.{{ host_wildcard_domain }};
+        proxy_set_header X-Dork-Local "1";
       }
 
       location ~^\/(?<project>[a-zA-Z0-9-_]+)\.(?<instance>[a-zA-Z0-9-_]+)(\/(?<path>.*))?$ {
         resolver localhost;
         proxy_read_timeout 3600;
-        proxy_pass http://$project.$instance.dork:80/$path?$args;
-        proxy_set_header X-Dork-Host $http_host;
-        proxy_set_header X-Dork-IP $remote_addr;
-        proxy_set_header X-Dork-Path $project.$instance;
-        {% if host_restrict_access %}
-        auth_basic "Restricted";
-        auth_basic_user_file /etc/nginx/.htpasswd-$project;
-        {% endif %}
+        proxy_pass http://127.0.0.1:80/$path?$args;
+        proxy_set_header Host $project.$instance.{{ host_wildcard_domain }};
+        proxy_set_header X-Dork-Local "1";
       }
     }
-    {% endif %}
 }
