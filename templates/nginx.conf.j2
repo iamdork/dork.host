@@ -107,19 +107,19 @@ http {
       server_name {{ host_wildcard_domain }};
       listen 80 default_server;
 
-      location ~^\/(?<project>[a-zA-Z0-9-_]+)(\/(?<path>.*))$ {
+      location ~^\/(?<project>[a-zA-Z0-9-_]+)(?<path>\/.*)$ {
         proxy_read_timeout 3600;
-        proxy_pass http://127.0.0.1:80/$path?$args;
+        proxy_pass http://127.0.0.1:80$path?$args;
         proxy_set_header Host $project.{{ host_wildcard_domain }};
-        proxy_set_header X-Dork-Local "1";
+        proxy_set_header x-dork-ip $remote_addr;
       }
 
-      location ~^\/(?<project>[a-zA-Z0-9-_]+)\.(?<instance>[a-zA-Z0-9-_]+)(\/(?<path>.*))?$ {
+      location ~^\/(?<project>[a-zA-Z0-9-_]+)\.(?<instance>[a-zA-Z0-9-_]+)(?<path>\/.*)?$ {
         resolver localhost;
         proxy_read_timeout 3600;
-        proxy_pass http://127.0.0.1:80/$path?$args;
+        proxy_pass http://127.0.0.1:80$path?$args;
         proxy_set_header Host $project.$instance.{{ host_wildcard_domain }};
-        proxy_set_header X-Dork-Local "1";
+        proxy_set_header x-dork-ip $remote_addr;
       }
     }
 }
