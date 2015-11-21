@@ -73,7 +73,10 @@
 
 - name: install docker
   yum:
-    name: docker-engine
+    name: {{ item }}
+  with_items:
+  - docker-engine
+  - device-mapper-devel
 
 - name: start docker service
   service:
