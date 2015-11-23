@@ -25,10 +25,24 @@ http {
     keepalive_timeout  0;
 
 
+    {% if host_ssl %}
+      server {
+        listen 80 default_server;
+        return 301 https://$host$request_uri;
+      }
+    {% endif %}
+
+    include /etc/nginx/sites-enabled/*;
+
     {% for tool in tools['stdout_lines'] %}
       server {
         server_name {{ tool | regex_replace('^(.*).conf', '\\1') }}.{{ host_wildcard_domain }};
-        listen 80;
+        {% if host_ssl %}
+          listen 443;
+          include https.conf;
+        {% else %}
+          listen 80;
+        {% endif %}
 
         error_page 599 = @noauth;
         if (!-f /var/dork/auth/{{ tool | regex_replace('^(.*).conf', '\\1') }}) {
@@ -51,7 +65,12 @@ http {
       server_name ~^(?<project>[a-zA-Z0-9-_]+).{{ host_wildcard_domain }}$;
       set $wildcard {{ host_wildcard_domain }};
       set $subdomain $project.$project;
-      listen 80;
+      {% if host_ssl %}
+         listen 443;
+         include https.conf;
+      {% else %}
+         listen 80;
+      {% endif %}
 
       error_page 599 = @auth;
       if (-f /var/dork/auth/$project) {
@@ -73,7 +92,12 @@ http {
       server_name ~^(?<instance>[a-zA-Z0-9-_]+).(?<project>[a-zA-Z0-9-_]+).{{ host_wildcard_domain }}$;
       set $wildcard {{ host_wildcard_domain }};
       set $subdomain $project.$instance;
-      listen 80;
+      {% if host_ssl %}
+         listen 443;
+         include https.conf;
+      {% else %}
+         listen 80;
+      {% endif %}
 
       error_page 598 = @projectauth;
       error_page 599 = @instanceauth;
@@ -105,7 +129,12 @@ http {
 
     server {
       server_name {{ host_wildcard_domain }};
-      listen 80 default_server;
+      {% if host_ssl %}
+        listen 443 default_server;
+        include https.conf;
+      {% else %}
+        listen 80 default_server;
+      {% endif %}
 
       location ~^\/(?<project>[a-zA-Z0-9-_]+)(?<path>\/.*)$ {
         proxy_read_timeout 3600;

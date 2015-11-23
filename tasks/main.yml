@@ -167,6 +167,13 @@
   tags:
   - nginx-configuration
 
+- name: write https.conf
+  template:
+    src: https.conf.j2
+    dest: /etc/nginx/https.conf
+  tags:
+  - nginx-configuration
+
 - name: trigger config rebuild
   shell: /bin/true
   notify: rebuild configuration
