@@ -34,13 +34,13 @@
 # ======================================================================
 - name: check if dork development folder is mounted
   stat:
-    path: /var/dork
+    path: /var/dork-source
   tags:
   - update-dork
   register: dorkdev
 
 - name: install mounted dork sources
-  shell: pip install -e /var/dork
+  shell: pip install -e /var/dork-source
   tags:
   - update-dork
   when: dorkdev.stat.isdir is defined and dorkdev.stat.isdir
