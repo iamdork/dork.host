@@ -163,6 +163,8 @@ http {
         proxy_pass http://127.0.0.1:80$path?$args;
         proxy_set_header Host $project.{{ host_wildcard_domain }};
         proxy_set_header x-dork-ip $remote_addr;
+        proxy_set_header x-dork-port $server_port;
+        proxy_set_header x-dork-protocol $server_protocol;
       }
 
       location ~^\/(?<project>[a-zA-Z0-9-_]+)\.(?<instance>[a-zA-Z0-9-_]+)(?<path>\/.*)?$ {
@@ -171,6 +173,8 @@ http {
         proxy_pass http://127.0.0.1:80$path?$args;
         proxy_set_header Host $project.$instance.{{ host_wildcard_domain }};
         proxy_set_header x-dork-ip $remote_addr;
+        proxy_set_header x-dork-port $server_port;
+        proxy_set_header x-dork-protocol $server_protocol;
       }
     }
 }
