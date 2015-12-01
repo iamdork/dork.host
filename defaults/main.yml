@@ -1,1 +1,1 @@
-host_wildcard_domain: dork.localhost_dork_version: 0.1.2host_whitelist: []host_ssl: falsehost_ssl_certificate: ''host_ssl_cerfificate_key: ''host_ssl_dhparam: ''host_ssl_protocols: ''host_ssl_ciphers: ''
+host_wildcard_domain: dork.localhost_dork_version: 0.1.4host_whitelist: []host_ssl: falsehost_ssl_certificate: ''host_ssl_cerfificate_key: ''host_ssl_dhparam: ''host_ssl_protocols: ''host_ssl_ciphers: ''
