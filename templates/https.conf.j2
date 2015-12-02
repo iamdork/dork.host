@@ -9,4 +9,6 @@ ssl_ciphers '{{ host_ssl_ciphers }}';
 
 ssl_prefer_server_ciphers on;
 
+{% if host_ssl_dhparam %}
 ssl_dhparam {{ host_ssl_dhparam }};
+{% endif %}

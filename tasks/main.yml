@@ -142,6 +142,39 @@
   when: container.changed
 
 # ======================================================================
+# SSL Certificates (self signed)
+# ======================================================================
+- name: create ssl directory
+  file:
+    path: /etc/nginx/ssl
+    state: directory
+  tags: host-ssl
+
+- name: create dork.pass.key
+  shell: openssl genrsa -des3 -passout pass:x -out /etc/nginx/ssl/dork.pass.key 2048
+  args:
+    creates: /etc/nginx/ssl/dork.pass.key
+  tags: host-ssl
+
+- name: create dork.key
+  shell: openssl rsa -passin pass:x -in /etc/nginx/ssl/dork.pass.key -out /etc/nginx/ssl/dork.key
+  args:
+    creates: /etc/nginx/ssl/dork.key
+  tags: host-ssl
+
+- name: create dork.csr
+  shell: openssl req -nodes -new -subj "/C=AT/L=Vienna/O=dork/OU=dork/CN=*.{{ host_wildcard_domain }}" -key /etc/nginx/ssl/dork.key -out /etc/nginx/ssl/dork.csr
+  args:
+    creates: /etc/nginx/ssl/dork.csr
+  tags: host-ssl
+
+- name: generate dork.crt
+  shell: openssl x509 -req -days 365 -in /etc/nginx/ssl/dork.csr -signkey /etc/nginx/ssl/dork.key -out /etc/nginx/ssl/dork.crt
+  args:
+    creates: /etc/nginx/ssl/dork.crt
+  tags: host-ssl
+
+# ======================================================================
 # Make hostsfile writable
 # ======================================================================
 - name: make hostsfile writable
@@ -204,4 +237,3 @@
 
 - name: enable dork service
   shell: systemctl enable dork
-

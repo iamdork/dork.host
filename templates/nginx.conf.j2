@@ -160,7 +160,11 @@ http {
 
       location ~^\/(?<project>[a-zA-Z0-9-_]+)(?<path>\/.*)$ {
         proxy_read_timeout 3600;
+        {% if host_ssl %}
+        proxy_pass https://127.0.0.1:443$path?$args;
+        {% else %}
         proxy_pass http://127.0.0.1:80$path?$args;
+        {% endif %}
         proxy_set_header Host $project.{{ host_wildcard_domain }};
         proxy_set_header x-dork-ip $remote_addr;
         proxy_set_header x-dork-port $server_port;
@@ -170,7 +174,11 @@ http {
       location ~^\/(?<project>[a-zA-Z0-9-_]+)\.(?<instance>[a-zA-Z0-9-_]+)(?<path>\/.*)?$ {
         resolver localhost;
         proxy_read_timeout 3600;
+        {% if host_ssl %}
+        proxy_pass https://127.0.0.1:443$path?$args;
+        {% else %}
         proxy_pass http://127.0.0.1:80$path?$args;
+        {% endif %}
         proxy_set_header Host $project.$instance.{{ host_wildcard_domain }};
         proxy_set_header x-dork-ip $remote_addr;
         proxy_set_header x-dork-port $server_port;
