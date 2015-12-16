@@ -119,27 +119,12 @@
     state: started
 
 # ======================================================================
-# Build the dork container image
+# Pull the dork container image
 # ======================================================================
-- name: copy container directory
-  copy:
-    src: container/
-    dest: /tmp/container/
-
-- name: copy ssh authorized key
-  shell: cp /etc/dork-keys/key.pub /tmp/container/dork.pub
-  args:
-    creates: /tmp/container/dork.pub
-
-- name: check if image already exists
-  shell: docker images | grep dork/container | wc -l
-  register: container
-  changed_when: container.stdout_lines[0] == "0"
-
-- name: build the base container
-  shell: docker build -t dork/container /tmp/container
-  ignore_errors: yes
-  when: container.changed
+- name: pull the latest base container image
+  shell: docker pull iamdork/container
+  tags:
+  - update-dork
 
 # ======================================================================
 # SSL Certificates (self signed)
