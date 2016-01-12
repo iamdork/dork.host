@@ -48,7 +48,7 @@
 - name: install dork cli tool
   pip:
     name: dork
-    version: "{{ host_dork_version }}"
+    state: latest
   tags:
   - update-dork
   when: not dorkdev.stat.isdir is defined or not dorkdev.stat.isdir
