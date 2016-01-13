@@ -53,6 +53,16 @@
   - update-dork
   when: not dorkdev.stat.isdir is defined or not dorkdev.stat.isdir
 
+
+- name: revert ansible to 1.9
+  pip:
+    name: ansible
+    state: present
+    version: 1.9.4
+  tags:
+  - update-dork
+  when: not dorkdev.stat.isdir is defined or not dorkdev.stat.isdir
+
 - name: copy dork helper scripts
   copy:
     src: bin/{{ item }}.sh
