@@ -9,6 +9,11 @@
   - dnsmasq
   - httpd-tools
   - git
+  - libffi-devel
+  - openssl-devel
+  - libjpeg-devel
+  - libxml2-devel
+  - libxslt-devel
 
 - name: install pip packages
   pip:
